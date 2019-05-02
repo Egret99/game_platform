@@ -38,6 +38,7 @@ app.get('/', (req, res) => {
 })
 
 require('./routes/auth')(app);
+require('./routes/user')(app);
 
 const PORT = 3000;
 app.listen(PORT, () => {

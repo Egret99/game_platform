@@ -5,12 +5,13 @@ const keys = require('../../config/keys');
 const User = require('../UserModel');
 
 passport.serializeUser((user, cb) => {
-    cb(null, user.username);
+    cb(null, user._id);
 });
 
-passport.deserializeUser(async (username, cb) => {
-    const user = await User.findOne({username});
+passport.deserializeUser(async (id, cb) => {
+    const user = await User.findById(id);
     cb(null, {
+        _id: user.id,
         username: user.username,
         name: user.name,
         score: user.score
@@ -45,6 +46,7 @@ passport.use(new LocalStrategy(
             if (!user) { return cb(null, false); }
             if (!user.verifyPassword(password)) { return cb(null, false); }
             return cb(null, {
+                _id: user._id,
                 username: user.username,
                 score: user.score
             });

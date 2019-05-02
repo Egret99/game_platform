@@ -9,7 +9,7 @@ module.exports = (app) => {
         res.redirect('/');
     });
     
-    app.get('/userInfo', async (req, res) => {
+    app.get('/me', async (req, res) => {
         if (req.user) {
             res.send({
                 status: 200,
