@@ -11,7 +11,7 @@ const userSchema = mongoose.Schema({
     name: {
         type: String
     },
-    score: {
+    chip: {
         type: Number,
         required: true
     }

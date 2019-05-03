@@ -11,7 +11,7 @@ module.exports = app => {
 
         const user = await User.findById(req.user._id);
         const updates = Object.keys(req.body);
-        const allowedUpdates = ["password", "name", "score"];
+        const allowedUpdates = ["password", "name", "chip"];
         const validUpdates = updates.every(update => allowedUpdates.includes(update));
 
         if (!validUpdates) {
@@ -30,7 +30,7 @@ module.exports = app => {
                 _id: user.id,
                 username: user.username,
                 name: user.name,
-                score: user.score
+                chip: user.chip
             }
         })
     })

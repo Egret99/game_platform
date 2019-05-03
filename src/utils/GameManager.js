@@ -18,7 +18,18 @@ class GameManager {
         if (this.isFull()) {
             return;
         }
-        this.rooms.push(new Room(roomName, description));
+        const newRoom = new Room(roomName, description)
+        this.rooms.push(newRoom);
+        return newRoom;
+    }
+
+    getRoomByName(roomName) {
+        const room = rooms.filter(room => room.name === roomName)[0];
+        return room;
+    }
+
+    getAllRooms() {
+        return this.rooms;
     }
 }
 

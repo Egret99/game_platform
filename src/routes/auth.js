@@ -1,4 +1,5 @@
 const passport = require('passport');
+const User = require('../UserModel');
 
 module.exports = (app) => {
     app.get('/login/google', passport.authenticate('google', {
@@ -6,6 +7,7 @@ module.exports = (app) => {
     }));
     
     app.get('/login/google/callback', passport.authenticate('google'), (req, res) => {
+        console.log(req.user);
         res.redirect('/');
     });
     
@@ -29,13 +31,13 @@ module.exports = (app) => {
                 username: req.body.username,
                 password: req.body.password,
                 name: req.body.username,
-                score: 0
+                chip: 200
             });
 
             await user.save();
     
             res.send({
-                status: 201,
+                status: 200,
                 user: {
                     username: req.body.username,
                     name: req.body.username,

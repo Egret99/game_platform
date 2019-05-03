@@ -16,6 +16,7 @@ const app = express();
 
 const keys = require('../config/keys');
 
+app.use(express.static(path.join(__dirname, '../dist')));
 app.use(bodyParser.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieSession({
@@ -33,14 +34,12 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-    console.log(req.user);
     res.sendFile(publicPath);
-})
+});
 
 require('./routes/auth')(app);
 require('./routes/user')(app);
+require('./routes/room')(app);
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log('App is running on port %s', 3000);
-});
+const PORT = 3000 || process.env.PORT;
+app.listen(PORT, "0.0.0.0");

@@ -10,12 +10,17 @@ passport.serializeUser((user, cb) => {
 
 passport.deserializeUser(async (id, cb) => {
     const user = await User.findById(id);
-    cb(null, {
-        _id: user.id,
-        username: user.username,
-        name: user.name,
-        score: user.score
-    });
+    console.log(user);
+    if (user) {
+        cb(null, {
+            _id: user.id,
+            username: user.username,
+            name: user.name,
+            chip: user.chip
+        });
+    } else {
+        cb(null, null);
+    }
 });
 
 passport.use(new GoogleStrategy({
@@ -30,10 +35,12 @@ passport.use(new GoogleStrategy({
             user = new User({
                 username: profile.id,
                 name: profile.displayName,
-                score: 0
+                chip: 200
             });
             await user.save();
         }
+
+        console.log(user);
 
         cb(null, user);
     }
@@ -48,7 +55,7 @@ passport.use(new LocalStrategy(
             return cb(null, {
                 _id: user._id,
                 username: user.username,
-                score: user.score
+                chip: user.chip
             });
           });
     }
