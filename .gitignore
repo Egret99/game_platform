@@ -1,6 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
 # Primary key
 config/keys.js
+src/game/*.js
+src/game/*.js.map
 
 ### macOS template
 # General
