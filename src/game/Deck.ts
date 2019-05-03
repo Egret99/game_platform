@@ -21,7 +21,7 @@ export class Deck {
     }
 
     public draw(): Card {
-        const index = Math.floor(Math.random() * this.cards.length)
+        const index = Math.floor(Math.random() * this.cards.length);
         return this.cards.splice(index, 1)[0];
     }
 }
