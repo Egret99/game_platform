@@ -1,4 +1,4 @@
-import { Card, Suit } from './Card';
+import { CompareResult, Card } from './Card';
 import { Deck } from "./Deck";
 
 enum HandValue {

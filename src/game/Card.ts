@@ -1,3 +1,5 @@
+export type CompareResult = -1 | 0 | 1;
+
 export enum Suit {
     Spade = '♠️',
     Heart = '♥️',
