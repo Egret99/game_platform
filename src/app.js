@@ -28,8 +28,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use((req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Origin', 'http://localhost:8080');
     res.set('Access-Control-Allow-Headers', 'content-type');
+    res.set('Access-Control-Allow-Credentials', 'true');
     next();
 });
 
@@ -42,4 +43,6 @@ require('./routes/user')(app);
 require('./routes/room')(app);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0");
+app.listen(PORT, () => {
+    console.log('App listening to port %s', PORT);
+});

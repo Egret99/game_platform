@@ -5,25 +5,26 @@ module.exports = (app) => {
     app.get('/login/google', passport.authenticate('google', {
         scope: ['profile']
     }));
-    
+
     app.get('/login/google/callback', passport.authenticate('google'), (req, res) => {
-        console.log(req.user);
         res.redirect('/');
     });
-    
+
     app.get('/me', async (req, res) => {
         if (req.user) {
             res.send({
                 status: 200,
+                msg: 'ok',
                 user: req.user
             })
         } else {
             res.send({
                 status: 400,
+                msg: 'Not logged in',
             })
         }
     });
-    
+
     app.post('/register', async (req, res) => {
         let user = await User.find({username: req.body.username});
         if (user.length <= 0) {
@@ -35,7 +36,7 @@ module.exports = (app) => {
             });
 
             await user.save();
-    
+
             res.send({
                 status: 200,
                 user: {
@@ -51,7 +52,7 @@ module.exports = (app) => {
             })
         }
     });
-    
+
     app.post('/login', passport.authenticate('local'), async (req, res) => {
         res.send({
             status: 200,
