@@ -41,5 +41,5 @@ require('./routes/auth')(app);
 require('./routes/user')(app);
 require('./routes/room')(app);
 
-const PORT = 3000 || process.env.PORT;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0");
