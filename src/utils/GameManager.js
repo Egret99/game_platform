@@ -18,7 +18,7 @@ class GameManager {
         if (this.isFull()) {
             return;
         }
-        const newRoom = new Room(roomName, description)
+        const newRoom = new Room(roomName, description);
         this.rooms.push(newRoom);
         return newRoom;
     }
@@ -27,8 +27,8 @@ class GameManager {
         return this.rooms.filter(room => room.name === roomName)[0];
     }
 
-    getAllRooms() {
-        return this.rooms;
+    get allRoomsInfo() {
+        return this.rooms.map(room => room.roomInfo);
     }
 }
 
