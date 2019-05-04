@@ -24,8 +24,7 @@ class GameManager {
     }
 
     getRoomByName(roomName) {
-        const room = rooms.filter(room => room.name === roomName)[0];
-        return room;
+        return this.rooms.filter(room => room.name === roomName)[0];
     }
 
     getAllRooms() {
