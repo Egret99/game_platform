@@ -29,7 +29,10 @@ class GameManager {
         this.waitList.push(socket);
     }
 
-    authorizeSocket(socketId, username) {
+    authorizeSocket(socketId, username, roomName) {
+        if (!this.hasRoom(roomName)) {
+            return undefined;
+        }
         for (let i = 0; i < this.waitList.length; i += 1) {
             const curr = this.waitList[i];
             if (curr.id === socketId) {

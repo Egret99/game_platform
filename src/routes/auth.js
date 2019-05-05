@@ -78,7 +78,7 @@ module.exports = (app) => {
 
     app.post('/socket', (req, res) => {
         if (req.user) {
-            const socket = gameManager.authorizeSocket(req.body.socketId, req.user.user);
+            const socket = gameManager.authorizeSocket(req.body.socketId, req.user.user, req.body.roomName);
             if (socket) {
                 res.send({
                     status: 200,
