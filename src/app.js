@@ -2,7 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const passport = require('passport');
+const http = require('http');
+const socketIO = require('socket.io');
 const cookieSession = require('cookie-session');
+const gameManager = require('../src/utils/GameManager');
+
 const publicPath = path.join(__dirname, '../index.html');
 
 // connect to database
@@ -13,6 +17,18 @@ const User = require('./UserModel');
 require('./services/passport');
 
 const app = express();
+const server = http.Server(app);
+const io = socketIO(server);
+
+io.on('connection', (socket) => {
+    console.log(`User ${socket.id} has connected.`);
+
+    gameManager.addWaitingClient(socket);
+
+    socket.on('disconnect', () => {
+        console.log(`User ${socket.id} has disconnected.`);
+    });
+});
 
 const keys = require('../config/keys');
 
@@ -28,8 +44,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use((req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Origin', 'http://localhost:8080');
     res.set('Access-Control-Allow-Headers', 'content-type');
+    res.set('Access-Control-Allow-Credentials', 'true');
     next();
 });
 
@@ -41,5 +58,7 @@ require('./routes/auth')(app);
 require('./routes/user')(app);
 require('./routes/room')(app);
 
-const PORT = 3000 || process.env.PORT;
-app.listen(PORT, "0.0.0.0");
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log('App listening to port %s', PORT);
+});

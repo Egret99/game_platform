@@ -13,13 +13,14 @@ module.exports = app => {
                 if (gameManager.isFull()) {
                     res.send({
                         status: 400,
-                        msg: "room nunber exceeds maximum"
+                        msg: "room number exceeds maximum"
                     });
                 } else {
-                    const room = gameManager.createRoom(req.body.roomname, req.body.description);
+                    const room = gameManager.createRoom(req.body.roomName, req.body.description);
                     res.send({
                         status: 200,
-                        roomName: room.name
+                        msg: 'ok',
+                        room: room.roomInfo,
                     })
                 }
             }
@@ -45,10 +46,11 @@ module.exports = app => {
 
     app.get('/room', (req, res) => {
         if (req.user) {
-            const rooms = gameManager.getAllRooms();
+            const rooms = gameManager.allRoomsInfo;
             res.send({
                 status: 200,
-                rooms: [...rooms]
+                msg: 'ok',
+                rooms,
             });
         } else {
             res.send({

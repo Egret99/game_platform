@@ -10,7 +10,6 @@ passport.serializeUser((user, cb) => {
 
 passport.deserializeUser(async (id, cb) => {
     const user = await User.findById(id);
-    console.log(user);
     if (user) {
         cb(null, {
             _id: user.id,
@@ -39,9 +38,6 @@ passport.use(new GoogleStrategy({
             });
             await user.save();
         }
-
-        console.log(user);
-
         cb(null, user);
     }
 ));

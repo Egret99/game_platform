@@ -3,6 +3,8 @@ const Room = require('./Room');
 class GameManager {
     constructor() {
         this.rooms = [];
+        this.waitList = [];
+        this.authorizedList = {};
     }
 
     isFull() {
@@ -18,18 +20,33 @@ class GameManager {
         if (this.isFull()) {
             return;
         }
-        const newRoom = new Room(roomName, description)
+        const newRoom = new Room(roomName, description);
         this.rooms.push(newRoom);
         return newRoom;
     }
 
-    getRoomByName(roomName) {
-        const room = rooms.filter(room => room.name === roomName)[0];
-        return room;
+    addWaitingClient(socket) {
+        this.waitList.push(socket);
     }
 
-    getAllRooms() {
-        return this.rooms;
+    authorizeSocket(socketId, username) {
+        for (let i = 0; i < this.waitList.length; i += 1) {
+            const curr = this.waitList[i];
+            if (curr.id === socketId) {
+                this.authorizedList[username] = curr;
+                this.waitList.splice(i, 1);
+                return curr;
+            }
+        }
+        return undefined;
+    }
+
+    getRoomByName(roomName) {
+        return this.rooms.filter(room => room.name === roomName)[0];
+    }
+
+    get allRoomsInfo() {
+        return this.rooms.map(room => room.roomInfo);
     }
 }
 
