@@ -1,5 +1,6 @@
 const passport = require('passport');
 const User = require('../UserModel');
+const gameManager = require('../utils/GameManager');
 
 module.exports = (app) => {
     app.get('/login/google', passport.authenticate('google', {
@@ -73,5 +74,27 @@ module.exports = (app) => {
                 msg: "You are not logged in."
             });
         }
-    })
+    });
+
+    app.post('/socket', (req, res) => {
+        if (req.user) {
+            const socket = gameManager.authorizeSocket(req.body.socketId, req.user.user);
+            if (socket) {
+                res.send({
+                    status: 200,
+                    msg: 'ok',
+                });
+            } else {
+                res.send({
+                    status: 400,
+                    msg: 'Socket not found!',
+                })
+            }
+        } else {
+            res.send({
+                status: 401,
+                msg: 'Not authorized!',
+            });
+        }
+    });
 }

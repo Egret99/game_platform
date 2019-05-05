@@ -5,6 +5,8 @@ const passport = require('passport');
 const http = require('http');
 const socketIO = require('socket.io');
 const cookieSession = require('cookie-session');
+const gameManager = require('../src/utils/GameManager');
+
 const publicPath = path.join(__dirname, '../index.html');
 
 // connect to database
@@ -21,9 +23,7 @@ const io = socketIO(server);
 io.on('connection', (socket) => {
     console.log(`User ${socket.id} has connected.`);
 
-    socket.on('join', (roomName) => {
-        console.log(`User ${socket.id} wants to join room ${roomName}`);
-    });
+    gameManager.addWaitingClient(socket);
 
     socket.on('disconnect', () => {
         console.log(`User ${socket.id} has disconnected.`);
