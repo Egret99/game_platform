@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const passport = require('passport');
+const http = require('http');
+const socketIO = require('socket.io');
 const cookieSession = require('cookie-session');
 const publicPath = path.join(__dirname, '../index.html');
 
@@ -13,6 +15,20 @@ const User = require('./UserModel');
 require('./services/passport');
 
 const app = express();
+const server = http.Server(app);
+const io = socketIO(server);
+
+io.on('connection', (socket) => {
+    console.log(`User ${socket.id} has connected.`);
+
+    socket.on('join', (roomName) => {
+        console.log(`User ${socket.id} wants to join room ${roomName}`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`User ${socket.id} has disconnected.`);
+    });
+});
 
 const keys = require('../config/keys');
 
@@ -43,6 +59,6 @@ require('./routes/user')(app);
 require('./routes/room')(app);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log('App listening to port %s', PORT);
 });
