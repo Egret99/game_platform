@@ -20,7 +20,7 @@ module.exports = app => {
                     res.send({
                         status: 200,
                         msg: 'ok',
-                        roomName: room.name
+                        room: room.roomInfo,
                     })
                 }
             }
