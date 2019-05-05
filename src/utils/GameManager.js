@@ -30,7 +30,7 @@ class GameManager {
     }
 
     authorizeSocket(socketId, username, roomName) {
-        if (!this.hasRoom(roomName)) {
+        if (!this.hasRoom(roomName) || this.getRoomByName(roomName).isFull()) {
             return undefined;
         }
         for (let i = 0; i < this.waitList.length; i += 1) {
@@ -38,6 +38,7 @@ class GameManager {
             if (curr.id === socketId) {
                 this.authorizedList[username] = curr;
                 this.waitList.splice(i, 1);
+                this.getRoomByName(roomName).addPlayer(username, curr);
                 return curr;
             }
         }

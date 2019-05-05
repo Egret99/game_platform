@@ -35,7 +35,7 @@ module.exports = app => {
     app.get('/room/:roomName', (req, res) => {
         if (req.user) {
             const room = gameManager.getRoomByName(req.params.roomName);
-            res.send(Object.assign({ status: 200 }, room.roomInfo));
+            res.send(Object.assign({ status: 200 }, room.roomInfoDetail));
         } else {
             res.send({
                 status: 400,
