@@ -19,6 +19,7 @@ require('./services/passport');
 const app = express();
 const server = http.Server(app);
 const io = socketIO(server);
+gameManager.setIO(io);
 
 io.on('connection', (socket) => {
     console.log(`User ${socket.id} has connected.`);
