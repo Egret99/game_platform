@@ -1,6 +1,7 @@
 import { Deck } from './Deck';
 import { Card } from './Card';
 import Player from './Player';
+import Room from '../utils/Room.js';
 
 enum Round {
     Preflop,
@@ -9,10 +10,12 @@ enum Round {
     River,
 }
 
-class Game {
+module.exports = class Game {
+    public room;
+
     public deck = new Deck();
 
-    public players: Player[] = [];
+    public players: Player[];
 
     public activePlayers: Player[] = [];
 
@@ -33,6 +36,11 @@ class Game {
     public betNumber = 0;
 
     public round = Round.Preflop;
+
+    public constructor(room: Room, players: { username: string, chip: number }[]) {
+        this.room = room;
+        this.players = players.map(player => new Player(player.username, player.chip));
+    }
 
     public startGame(): void {
         this.activePlayers = this.players.concat();

@@ -1,10 +1,10 @@
 export type CompareResult = -1 | 0 | 1;
 
 export enum Suit {
-    Spade = '♠️',
-    Heart = '♥️',
-    Club = '♣️',
-    Diamond = '♦️',
+    Spade,
+    Heart,
+    Club,
+    Diamond,
 }
 
 export class Card {

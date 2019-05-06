@@ -1,3 +1,5 @@
+const Game = require('../game/index.js');
+
 module.exports = class Room {
     constructor(io, name, description) {
         this.io = io;
@@ -5,10 +7,23 @@ module.exports = class Room {
         this.description = description || '';
         this.sockets = {};
         this.players = {};
+        this.game = null;
+    }
+
+    start() {
+        this.game = new Game(this, this.playerList);
     }
 
     isFull() {
         return this.peopleNumber === 3;
+    }
+
+    roomBroadcast(event, payload) {
+        this.io.to(this.name).emit(event, payload);
+    }
+
+    playerEmit(username, event, payload) {
+        this.sockets[username].emit(event, payload);
     }
 
     addPlayer(user, socket) {
@@ -18,11 +33,15 @@ module.exports = class Room {
             chip: user.chip,
         };
         socket.join(this.name);
-        this.io.to(this.name).emit('join', this.players[user.username]);
+        this.roomBroadcast('join', this.players[user.username]);
     }
 
     get peopleNumber() {
         return Object.keys(this.sockets).length;
+    }
+
+    get playerList() {
+        return Object.keys(this.players).map(key => this.players[key]);
     }
 
     get roomInfo() {
