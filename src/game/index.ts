@@ -4,6 +4,8 @@ import Player from './Player';
 import Room from '../utils/Room.js';
 import Pattern from "./Pattern";
 
+const updateChip = require('../utils/updateChip.js');
+
 enum Round {
     Preflop,
     Flop,
@@ -126,6 +128,7 @@ module.exports = class Game {
                 username: player.username,
                 chip: award,
             });
+            updateChip(player.username, award);
         });
     }
 
@@ -245,6 +248,7 @@ module.exports = class Game {
 
     public bet(chip: number): void {
         this.currentPlayer.bet(chip);
+        updateChip(this.currentPlayer.username, -chip);
         if (this.currentPlayer.betChips > this.betNumber) {
             this.betNumber = this.currentPlayer.betChips;
         }

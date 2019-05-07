@@ -1,24 +1,13 @@
 const User = require('../UserModel');
+const chipManager = require('./chipManager');
 
 module.exports = async (username, chip) => {
     try {
         const user = await User.findOne({username});
-        user.chip = chip;
+        user.chip += chip;
+        chipManager.update(user);
         await user.save();
     } catch (err) {
-        res.send({
-            status: 400,
-            msg: "invalid operation"
-        });
+        throw new Error('Server error');
     }
-
-    res.send({
-        status: 200,
-        user: {
-            _id: user.id,
-            username: user.username,
-            name: user.name,
-            chip: user.chip
-        }
-    })
 };

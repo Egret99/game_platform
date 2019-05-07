@@ -6,6 +6,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const cookieSession = require('cookie-session');
 const gameManager = require('../src/utils/GameManager');
+const chipManager = require('../src/utils/chipManager');
 
 const publicPath = path.join(__dirname, '../index.html');
 
@@ -48,6 +49,11 @@ app.use((req, res, next) => {
     res.set('Access-Control-Allow-Origin', 'http://localhost:8080');
     res.set('Access-Control-Allow-Headers', 'content-type');
     res.set('Access-Control-Allow-Credentials', 'true');
+    next();
+});
+
+app.use((req, res, next) => {
+    chipManager.sync(req.user);
     next();
 });
 
