@@ -28,6 +28,7 @@ io.on('connection', (socket) => {
     gameManager.addWaitingClient(socket);
 
     socket.on('disconnect', () => {
+        gameManager.disconnectSocket(socket);
         console.log(`User ${socket.id} has disconnected.`);
     });
 });

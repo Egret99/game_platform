@@ -18,6 +18,18 @@ module.exports = class Room {
         return this.peopleNumber === 3;
     }
 
+    removePlayer(socket) {
+        Object.keys(this.sockets).forEach((username) => {
+            if (this.sockets[username] === socket) {
+                delete this.sockets[username];
+                delete this.players[username];
+            }
+            if (this.game) {
+                this.game.disconnect(username);
+            }
+        })
+    }
+
     roomBroadcast(event, payload) {
         this.io.to(this.name).emit(event, payload);
     }

@@ -54,6 +54,23 @@ class GameManager {
         return this.rooms.filter(room => room.name === roomName)[0];
     }
 
+    disconnectSocket(socket) {
+        for (let i = 0; i < this.waitList.length; i += 1) {
+            if (this.waitList[i] === socket) {
+                this.waitList.splice(i, 1);
+                return;
+            }
+        }
+        Object.keys(this.authorizedList).forEach(key => {
+            if (this.authorizedList[key] === socket) {
+                delete this.authorizedList[key];
+            }
+        });
+        this.rooms.forEach((room) => {
+            room.removePlayer(socket);
+        });
+    }
+
     get allRoomsInfo() {
         return this.rooms.map(room => room.roomInfo);
     }

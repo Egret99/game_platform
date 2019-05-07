@@ -85,6 +85,14 @@ module.exports = class Game {
         return this.players.filter(player => !player.isFolded);
     }
 
+    public disconnect(username: string) {
+        this.players.forEach((player) => {
+            if (player.username === username) {
+                player.isOffline = true;
+            }
+        });
+    }
+
     public startGame(): void {
         const firstPlayerIndex = this.lastDealerIndex === -1
             ? 0 : (this.lastDealerIndex + 1) % this.players.length;
@@ -190,12 +198,22 @@ module.exports = class Game {
         this.players.forEach((player) => {
             player.reset();
         });
-        setTimeout(() => {
-            this.room.roomBroadcast('announcement', 'Game will begin in seconds...');
-        }, 5000);
-        setTimeout(() => {
-            this.startGame();
-        }, 10000);
+        let enoughPlayer = true;
+        for (let i = this.players.length - 1; i >= 0; i -= 1) {
+            if (this.players[i].isOffline) {
+                this.players.splice(i, 1);
+            }
+            // TODO: more user leaving logic
+            enoughPlayer = false;
+        }
+        if (enoughPlayer) {
+            setTimeout(() => {
+                this.room.roomBroadcast('announcement', 'Game will begin in seconds...');
+            }, 5000);
+            setTimeout(() => {
+                this.startGame();
+            }, 10000);
+        }
     }
 
     public setNextPlayer(): void {

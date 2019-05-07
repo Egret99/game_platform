@@ -16,6 +16,8 @@ export default class Player {
 
     public isFolded = false;
 
+    public isOffline = false;
+
     public role: Role = Role.Player;
 
     public hand: Card[] = [];
