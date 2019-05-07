@@ -2,6 +2,7 @@ import { Deck } from './Deck';
 import { Card } from './Card';
 import Player from './Player';
 import Room from '../utils/Room.js';
+import Pattern from "./Pattern";
 
 enum Round {
     Preflop,
@@ -40,6 +41,38 @@ module.exports = class Game {
     public betNumber = 0;
 
     public round = Round.Preflop;
+
+    public static computeMaxPattern(handCards: Card[], publicCards: Card[]): Pattern {
+        const allCards = handCards.concat(publicCards);
+        let maxPattern = new Pattern(allCards.slice(0, 5));
+        for (let i = 0; i < allCards.length - 1; i += 1) {
+            for (let j = i + 1; j < allCards.length; j += 1) {
+                const currCards = [];
+                for (let m = 0; m < allCards.length; m += 1) {
+                    if (m !== i && m !== j) {
+                        currCards.push(allCards[m]);
+                    }
+                }
+                const currPattern = new Pattern(currCards);
+                if (currPattern.compare(maxPattern) === 1) {
+                    maxPattern = currPattern;
+                }
+            }
+        }
+        return maxPattern;
+    }
+
+    public static winnerFormat(pattern: Pattern | null, ...winners: Player[]): string {
+        if (pattern === null) {
+            return `${winners[0].username} wins!`;
+        }
+        const patternName = pattern.name;
+        if (winners.length > 1) {
+            return `${winners.map(winner => winner.username).join(', ')} win by ${patternName}`;
+        } else {
+            return `${winners[0].username} wins by ${patternName}`;
+        }
+    }
 
     public constructor(room: Room, players: { username: string, chip: number }[]) {
         this.room = room;
@@ -96,10 +129,45 @@ module.exports = class Game {
         });
     }
 
+    private revealHand() {
+        this.activePlayers.forEach((player) => {
+            this.room.roomBroadcast('card', {
+                username: player.username,
+                card: player.hand[0],
+            });
+            this.room.roomBroadcast('card', {
+                username: player.username,
+                card: player.hand[1],
+            });
+        });
+    }
+
     private close() {
         this.ended = true;
         if (this.existOnlyOne()) {
             this.winMoney(this.activePlayers[0]);
+            this.room.roomBroadcast('announcement', Game.winnerFormat(null, ...this.activePlayers));
+        } else {
+            this.revealHand();
+            const winners: Player[] = [];
+            let winnerPattern: Pattern = null;
+            this.activePlayers.forEach((player) => {
+                const currPattern = Game.computeMaxPattern(player.hand, this.publicCards);
+                if (winners.length === 0) {
+                    winners.push(player);
+                    winnerPattern = currPattern;
+                    return;
+                }
+                const compare = currPattern.compare(winnerPattern);
+                if (compare === 0) {
+                    winners.push(player);
+                } else if (compare === 1) {
+                    winners[0] = player;
+                    winnerPattern = currPattern;
+                }
+            });
+            this.room.roomBroadcast('announcement', Game.winnerFormat(winnerPattern, ...winners));
+            this.winMoney(...winners);
         }
     }
 
@@ -107,19 +175,24 @@ module.exports = class Game {
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.currentPlayer = this.players[this.currentPlayerIndex];
         if (this.currentPlayer.isFolded) {
+            this.checkTimes += 1;
             this.setNextPlayer();
         }
     }
 
     public processPlayer(): void {
-        if (this.currentPlayer.betChips === this.betNumber && this.raiseTimes === 3) {
+        if (this.checkTimes >= this.players.length
+            || (this.currentPlayer.betChips === this.betNumber && this.raiseTimes === 3)) {
             this.setNextRound();
+            return;
         }
+        this.room.roomBroadcast('inTurn', this.currentPlayer.username);
         const options = {
             fold: true,
             call: this.betNumber !== 0,
             raise: this.raiseTimes < 3,
-            check: this.currentPlayer.betChips >= this.betNumber,
+            check: this.currentPlayer.betChips >= this.betNumber
+            && !(this.currentPlayer.isBigBlind() && this.round === Round.Preflop),
         };
         this.room.playerEmit(this.currentPlayer.username, 'myTurn', options);
     }
@@ -181,8 +254,8 @@ module.exports = class Game {
         if (username !== this.currentPlayer.username) {
             return;
         }
-        this.room.playerEmit(username, 'endTurn', null);
         this[eventName]();
+        this.room.roomBroadcast('announcement', `${username}: ${eventName}`)
         if (!this.ended) {
             this.setNextPlayer();
             this.processPlayer();
@@ -190,7 +263,9 @@ module.exports = class Game {
     }
 
     public fold() {
+        this.checkTimes += 1;
         this.currentPlayer.isFolded = true;
+        this.room.roomBroadcast('fold', this.currentPlayer.username);
         if (this.existOnlyOne()) {
             this.close();
         }
@@ -198,23 +273,24 @@ module.exports = class Game {
 
     public check() {
         this.checkTimes += 1;
-        if (this.checkTimes >= this.activePlayers.length) {
-            this.setNextRound();
-        }
     }
 
     public raise() {
         this.raiseTimes += 1;
+        this.checkTimes = 0;
         this.bet(this.betNumber + this.limitBig - this.currentPlayer.betChips);
     }
 
     public call() {
         this.bet(this.betNumber - this.currentPlayer.betChips);
-        if (!this.activePlayers.some(
+        this.checkTimes += 1;
+        const isLastCall = !this.activePlayers.some(
             player => player.betChips !== this.currentPlayer.betChips
-        )) {
+        );
+        if (this.round === Round.Preflop && this.currentPlayer.isBigBlind() && isLastCall) {
+            this.setNextRound();
+        } else if (this.round !== Round.Preflop && isLastCall) {
             this.setNextRound();
         }
-        // TODO: allow big blind to raise
     }
 };

@@ -35,6 +35,10 @@ export default class Pattern {
         return card1.compare(card2);
     }
 
+    public get name(): string {
+        return HandValue[this.value];
+    }
+
     private sortCard(): void {
         this.cards.sort(Pattern.sortFunc);
         this.cards.reverse();
@@ -228,48 +232,3 @@ export default class Pattern {
         }
     }
 }
-
-const deck = new Deck();
-
-function computeMaxPattern(handCards: Card[], publicCards: Card[]): Pattern {
-    const allCards = handCards.concat(publicCards);
-    let maxPattern = new Pattern(allCards.slice(0, 5));
-    for (let i = 0; i < allCards.length - 1; i += 1) {
-        for (let j = i + 1; j < allCards.length; j += 1) {
-            const currCards = [];
-            for (let m = 0; m < allCards.length; m += 1) {
-                if (m !== i && m !== j) {
-                    currCards.push(allCards[m]);
-                }
-            }
-            const currPattern = new Pattern(currCards);
-            if (currPattern.compare(maxPattern) === 1) {
-                maxPattern = currPattern;
-            }
-        }
-    }
-    return maxPattern;
-}
-
-const handCards = [
-    deck.draw(),
-    deck.draw(),
-];
-
-const publicCards = [
-    deck.draw(),
-    deck.draw(),
-    deck.draw(),
-    deck.draw(),
-    deck.draw(),
-];
-
-const maxPattern = computeMaxPattern(handCards, publicCards);
-
-console.log('Public cards:');
-console.log(publicCards);
-console.log('My cards:');
-console.log(handCards);
-console.log('\n');
-console.log(maxPattern.cards);
-console.log(HandValue[maxPattern.value]);

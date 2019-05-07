@@ -50,6 +50,10 @@ export default class Player {
         return this.role === Role.Dealer;
     }
 
+    public isBigBlind(): boolean {
+        return this.role === Role.BigBlind;
+    }
+
     public get isAllin(): boolean {
         return this.chip === 0;
     }
