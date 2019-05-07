@@ -57,4 +57,11 @@ export default class Player {
     public get isAllin(): boolean {
         return this.chip === 0;
     }
+
+    public reset() {
+        this.betChips = 0;
+        this.isFolded = false;
+        this.role = Role.Player;
+        this.hand = [];
+    }
 }

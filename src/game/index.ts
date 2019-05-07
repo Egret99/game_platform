@@ -144,6 +144,7 @@ module.exports = class Game {
 
     private close() {
         this.ended = true;
+        this.room.roomBroadcast('inTurn', '');
         if (this.existOnlyOne()) {
             this.winMoney(this.activePlayers[0]);
             this.room.roomBroadcast('announcement', Game.winnerFormat(null, ...this.activePlayers));
@@ -169,6 +170,29 @@ module.exports = class Game {
             this.room.roomBroadcast('announcement', Game.winnerFormat(winnerPattern, ...winners));
             this.winMoney(...winners);
         }
+        setTimeout(() => {
+            this.endGame();
+        }, 10000);
+    }
+
+    public endGame() {
+        this.room.roomBroadcast('endGame', null);
+        this.deck.init();
+        this.pot = 0;
+        this.ended = false;
+        this.checkTimes = 0;
+        this.raiseTimes = 0;
+        this.betNumber = 0;
+        this.round = Round.Preflop;
+        this.players.forEach((player) => {
+            player.reset();
+        });
+        setTimeout(() => {
+            this.room.roomBroadcast('announcement', 'Game will begin in seconds...');
+        }, 5000);
+        setTimeout(() => {
+            this.startGame();
+        }, 10000);
     }
 
     public setNextPlayer(): void {
