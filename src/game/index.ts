@@ -33,6 +33,8 @@ module.exports = class Game {
 
     public lastDealerIndex = -1;
 
+    public checkTimes = 0;
+
     public raiseTimes = 0;
 
     public betNumber = 0;
@@ -115,7 +117,7 @@ module.exports = class Game {
         }
         const options = {
             fold: true,
-            call: true,
+            call: this.betNumber !== 0,
             raise: this.raiseTimes < 3,
             check: this.currentPlayer.betChips >= this.betNumber,
         };
@@ -135,11 +137,13 @@ module.exports = class Game {
         this.addPublicCard();
         this.betNumber = 0;
         this.raiseTimes = 0;
+        this.checkTimes = 0;
         this.activePlayers.forEach((player) => {
             player.betChips = 0;
         });
         this.setStartingPlayer();
         this.processPlayer();
+        this.room.roomBroadcast('newRound', null);
     }
 
     public bet(chip: number): void {
@@ -193,7 +197,10 @@ module.exports = class Game {
     }
 
     public check() {
-        return;
+        this.checkTimes += 1;
+        if (this.checkTimes >= this.activePlayers.length) {
+            this.setNextRound();
+        }
     }
 
     public raise() {
@@ -203,5 +210,10 @@ module.exports = class Game {
 
     public call() {
         this.bet(this.betNumber - this.currentPlayer.betChips);
+        if (!this.activePlayers.some(
+            player => player.betChips !== this.currentPlayer.betChips
+        )) {
+            this.setNextRound();
+        }
     }
 };
