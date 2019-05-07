@@ -23,7 +23,9 @@ module.exports = class Game {
 
     public pot = 0;
 
-    public limit = 1;
+    public limitSmall = 1;
+
+    public limitBig = this.limitSmall * 2;
 
     public currentPlayer: Player = null;
 
@@ -49,11 +51,17 @@ module.exports = class Game {
         this.lastDealerIndex = firstPlayerIndex;
         this.currentPlayerIndex = firstPlayerIndex;
         this.currentPlayer = this.activePlayers[firstPlayerIndex];
+        this.players.forEach((player) => {
+            this.initDeal(player);
+        });
         this.setNextPlayer();
         this.currentPlayer.setSmallBlind();
+        this.bet(this.limitSmall);
         this.setNextPlayer();
         this.currentPlayer.setBigBlind();
+        this.bet(this.limitBig);
         this.setNextPlayer();
+        this.processPlayer();
     }
 
     public setNextPlayer(): void {
@@ -61,17 +69,39 @@ module.exports = class Game {
         this.currentPlayer = this.activePlayers[this.currentPlayerIndex];
     }
 
+    public processPlayer() {
+        const options = {
+            fold: true,
+            call: true,
+            raise: this.raiseTimes < 3,
+            check: this.currentPlayer.betChips >= this.betNumber,
+        };
+        this.room.playerEmit(this.currentPlayer.username, 'myTurn', options);
+    }
+
     public setNextRound(): void {
         this.round += 1;
+        this.betNumber = 0;
     }
 
     public bet(chip: number): void {
         this.currentPlayer.bet(chip);
+        if (this.currentPlayer.betChips > this.betNumber) {
+            this.betNumber = this.currentPlayer.betChips;
+        }
+        this.room.roomBroadcast('bet', {
+            username: this.currentPlayer.username,
+            chip,
+        });
         this.pot += chip;
     }
 
     private deal(player: Player, card: Card): void {
         player.receiveCard(card);
+        this.room.playerEmit(player.username,'card', {
+            username: player.username,
+            card,
+        });
     }
 
     public initDeal(player: Player) {
@@ -80,6 +110,8 @@ module.exports = class Game {
     }
 
     public addPublicCard() {
-        this.publicCards.push(this.deck.draw());
+        const card = this.deck.draw();
+        this.publicCards.push(card);
+        this.room.roomBroadcast('publicCard', card);
     }
-}
+};

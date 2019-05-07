@@ -34,6 +34,15 @@ module.exports = class Room {
         };
         socket.join(this.name);
         this.roomBroadcast('join', this.players[user.username]);
+        if (this.isFull()) {
+            this.game = new Game(this, this.playerList);
+            setTimeout(() => {
+                this.roomBroadcast('announcement', 'Game will begin in seconds...');
+            }, 3000);
+            setTimeout(() => {
+                this.game.startGame();
+            }, 8000);
+        }
     }
 
     get peopleNumber() {
