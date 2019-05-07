@@ -23,21 +23,39 @@ passport
 
 ## Endpoints
 `/register` (POST) Used for registration user with username and password
+
 | param | type |
 | :---: | :---: |
 | username | String |
 | password | String |
 
 `/login` (POST) Used for login user with username and password  
+
 | param | type |
 | :---: | :---: |
 | username | String |
 | password | String |
 
-`/login/google` (GET) Used for registration and login user with google authentication  
+`/login/google` (GET) Used for registration and login user with google authentication 
+
+| param | type |
+| :---: | :---: |
+| N/A | N/A |
+ 
 `/logout` (GET) Used for log out the current user  
+
+| param | type |
+| :---: | :---: |
+| N/A | N/A |
+
 `/me` (GET) Used for get user information  
+
+| param | type |
+| :---: | :---: |
+| N/A | N/A |
+
 `/me` (PATCH) Used for update user information  
+
 | param | type |
 | :---: | :---: |
 | password | String |
