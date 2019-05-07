@@ -215,5 +215,6 @@ module.exports = class Game {
         )) {
             this.setNextRound();
         }
+        // TODO: allow big blind to raise
     }
 };
