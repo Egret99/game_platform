@@ -17,11 +17,11 @@ module.exports = class Game {
 
     public players: Player[];
 
-    public activePlayers: Player[] = [];
-
     public publicCards: Card[] = [];
 
     public pot = 0;
+
+    public ended = false;
 
     public limitSmall = 1;
 
@@ -44,16 +44,20 @@ module.exports = class Game {
         this.players = players.map(player => new Player(player.username, player.chip));
     }
 
+    private get activePlayers(): Player[] {
+        return this.players.filter(player => !player.isFolded);
+    }
+
     public startGame(): void {
-        this.activePlayers = this.players.concat();
         const firstPlayerIndex = this.lastDealerIndex === -1
             ? 0 : (this.lastDealerIndex + 1) % this.players.length;
         this.lastDealerIndex = firstPlayerIndex;
         this.currentPlayerIndex = firstPlayerIndex;
-        this.currentPlayer = this.activePlayers[firstPlayerIndex];
+        this.currentPlayer = this.players[firstPlayerIndex];
         this.players.forEach((player) => {
             this.initDeal(player);
         });
+        this.currentPlayer.setDealer();
         this.setNextPlayer();
         this.currentPlayer.setSmallBlind();
         this.bet(this.limitSmall);
@@ -64,12 +68,51 @@ module.exports = class Game {
         this.processPlayer();
     }
 
-    public setNextPlayer(): void {
-        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.activePlayers.length;
-        this.currentPlayer = this.activePlayers[this.currentPlayerIndex];
+    private setStartingPlayer(): void {
+        for (let i = 0; i < this.players.length; i += 1) {
+            if (this.players[i].isDealer()) {
+                this.currentPlayerIndex = i;
+                this.currentPlayer = this.players[i];
+            }
+        }
+        if (this.currentPlayer.isFolded) {
+            this.setNextPlayer();
+        }
     }
 
-    public processPlayer() {
+    private existOnlyOne(): boolean {
+        return this.players.filter(player => !player.isFolded).length === 1;
+    }
+
+    private winMoney(...winners: Player[]): void {
+        const award = Math.floor(this.pot / winners.length);
+        winners.forEach((player) => {
+            this.room.roomBroadcast('addMoney', {
+                username: player.username,
+                chip: award,
+            });
+        });
+    }
+
+    private close() {
+        this.ended = true;
+        if (this.existOnlyOne()) {
+            this.winMoney(this.activePlayers[0]);
+        }
+    }
+
+    public setNextPlayer(): void {
+        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        this.currentPlayer = this.players[this.currentPlayerIndex];
+        if (this.currentPlayer.isFolded) {
+            this.setNextPlayer();
+        }
+    }
+
+    public processPlayer(): void {
+        if (this.currentPlayer.betChips === this.betNumber && this.raiseTimes === 3) {
+            this.setNextRound();
+        }
         const options = {
             fold: true,
             call: true,
@@ -80,8 +123,23 @@ module.exports = class Game {
     }
 
     public setNextRound(): void {
+        if (this.round === Round.River) {
+            this.close();
+            return;
+        }
+        if (this.round === Round.Preflop) {
+            this.addPublicCard();
+            this.addPublicCard();
+        }
         this.round += 1;
+        this.addPublicCard();
         this.betNumber = 0;
+        this.raiseTimes = 0;
+        this.activePlayers.forEach((player) => {
+            player.betChips = 0;
+        });
+        this.setStartingPlayer();
+        this.processPlayer();
     }
 
     public bet(chip: number): void {
@@ -104,14 +162,46 @@ module.exports = class Game {
         });
     }
 
-    public initDeal(player: Player) {
+    public initDeal(player: Player): void {
         this.deal(player, this.deck.draw());
         this.deal(player, this.deck.draw());
     }
 
-    public addPublicCard() {
+    public addPublicCard(): void {
         const card = this.deck.draw();
         this.publicCards.push(card);
         this.room.roomBroadcast('publicCard', card);
+    }
+
+    public triggerEvent(username: string, eventName: string): void {
+        if (username !== this.currentPlayer.username) {
+            return;
+        }
+        this.room.playerEmit(username, 'endTurn', null);
+        this[eventName]();
+        if (!this.ended) {
+            this.setNextPlayer();
+            this.processPlayer();
+        }
+    }
+
+    public fold() {
+        this.currentPlayer.isFolded = true;
+        if (this.existOnlyOne()) {
+            this.close();
+        }
+    }
+
+    public check() {
+        return;
+    }
+
+    public raise() {
+        this.raiseTimes += 1;
+        this.bet(this.betNumber + this.limitBig - this.currentPlayer.betChips);
+    }
+
+    public call() {
+        this.bet(this.betNumber - this.currentPlayer.betChips);
     }
 };

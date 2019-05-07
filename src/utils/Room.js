@@ -33,6 +33,18 @@ module.exports = class Room {
             chip: user.chip,
         };
         socket.join(this.name);
+        socket.on('fold', () => {
+            this.game.triggerEvent(user.username, 'fold');
+        });
+        socket.on('check', () => {
+            this.game.triggerEvent(user.username, 'check');
+        });
+        socket.on('raise', () => {
+            this.game.triggerEvent(user.username, 'raise');
+        });
+        socket.on('call', () => {
+            this.game.triggerEvent(user.username, 'call');
+        });
         this.roomBroadcast('join', this.players[user.username]);
         if (this.isFull()) {
             this.game = new Game(this, this.playerList);

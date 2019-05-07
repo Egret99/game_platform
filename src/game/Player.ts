@@ -14,6 +14,8 @@ export default class Player {
 
     public betChips = 0;
 
+    public isFolded = false;
+
     public role: Role = Role.Player;
 
     public hand: Card[] = [];
@@ -42,6 +44,10 @@ export default class Player {
 
     public setDealer(): void {
         this.role = Role.Dealer;
+    }
+
+    public isDealer(): boolean {
+        return this.role === Role.Dealer;
     }
 
     public get isAllin(): boolean {
