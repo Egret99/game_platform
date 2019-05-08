@@ -6,6 +6,9 @@ class GameManager {
         this.rooms = [];
         this.waitList = [];
         this.authorizedList = {};
+        setInterval(() => {
+            this.destroyRoom();
+        }, 60 * 1000);
     }
 
     setIO(io) {
@@ -19,6 +22,15 @@ class GameManager {
 
     hasRoom(roomName) {
         return this.rooms.some(room => room.name === roomName);
+    }
+
+    destroyRoom() {
+        for (let i = this.rooms.length - 1; i >= 0; i -= 1) {
+            const curr = this.rooms[i];
+            if (curr.peopleNumber === 0 && curr.isOld()) {
+                this.rooms.splice(i, 1);
+            }
+        }
     }
 
     createRoom(roomName, description) {

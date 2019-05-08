@@ -18,13 +18,13 @@ module.exports = class Game {
 
     public deck = new Deck();
 
-    public players: Player[];
+    public players: Player[] = [];
 
     public publicCards: Card[] = [];
 
     public pot = 0;
 
-    public ended = false;
+    public started = false;
 
     public limitSmall = 1;
 
@@ -76,24 +76,56 @@ module.exports = class Game {
         }
     }
 
-    public constructor(room: Room, players: { username: string, chip: number }[]) {
+    public constructor(room: Room) {
         this.room = room;
-        this.players = players.map(player => new Player(player.username, player.chip));
     }
 
     private get activePlayers(): Player[] {
         return this.players.filter(player => !player.isFolded);
     }
 
-    public disconnect(username: string) {
-        this.players.forEach((player) => {
-            if (player.username === username) {
+    public addPlayer(player: { username: string, chip: number }): void {
+        this.players.push(new Player(player.username, player.chip));
+    }
+
+    public disconnect(username: string): void {
+        if (this.started) {
+            const player = this.getPlayerByName(username);
+            if (player) {
                 player.isOffline = true;
             }
-        });
+            if (this.currentPlayer.username === username) {
+                this.triggerEvent(username, 'fold');
+            }
+        } else {
+            this.removePlayer(username);
+        }
+    }
+
+    private getPlayerByName(username: string): Player | undefined {
+        for (let i = 0; i < this.players.length; i += 1) {
+            if (this.players[i].username === username) {
+                return this.players[i];
+            }
+        }
+        return undefined;
+    }
+
+    private removePlayer(username: string) {
+        for (let i = this.players.length - 1; i >= 0; i -= 1) {
+            if (this.players[i].username === username) {
+                this.players.splice(i, 1);
+                this.room.roomBroadcast('leave', username);
+            }
+        }
     }
 
     public startGame(): void {
+        if (this.players.length !== 3) {
+            this.room.roomBroadcast('announcement', 'Waiting for players...');
+            return;
+        }
+        this.started = true;
         const firstPlayerIndex = this.lastDealerIndex === -1
             ? 0 : (this.lastDealerIndex + 1) % this.players.length;
         this.lastDealerIndex = firstPlayerIndex;
@@ -154,7 +186,7 @@ module.exports = class Game {
     }
 
     private close() {
-        this.ended = true;
+        this.started = false;
         this.room.roomBroadcast('inTurn', '');
         if (this.existOnlyOne()) {
             this.winMoney(this.activePlayers[0]);
@@ -190,7 +222,8 @@ module.exports = class Game {
         this.room.roomBroadcast('endGame', null);
         this.deck.init();
         this.pot = 0;
-        this.ended = false;
+        this.publicCards = [];
+        this.started = false;
         this.checkTimes = 0;
         this.raiseTimes = 0;
         this.betNumber = 0;
@@ -201,10 +234,9 @@ module.exports = class Game {
         let enoughPlayer = true;
         for (let i = this.players.length - 1; i >= 0; i -= 1) {
             if (this.players[i].isOffline) {
-                this.players.splice(i, 1);
+                this.removePlayer(this.players[i].username);
+                enoughPlayer = false;
             }
-            // TODO: more user leaving logic
-            enoughPlayer = false;
         }
         if (enoughPlayer) {
             setTimeout(() => {
@@ -213,12 +245,18 @@ module.exports = class Game {
             setTimeout(() => {
                 this.startGame();
             }, 10000);
+        } else {
+            this.room.roomBroadcast('announcement', 'Waiting for players...');
         }
     }
 
     public setNextPlayer(): void {
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.currentPlayer = this.players[this.currentPlayerIndex];
+        if (this.currentPlayer.isOffline) {
+            this.triggerEvent(this.currentPlayer.username, 'fold');
+            return;
+        }
         if (this.currentPlayer.isFolded) {
             this.checkTimes += 1;
             this.setNextPlayer();
@@ -300,21 +338,35 @@ module.exports = class Game {
         if (username !== this.currentPlayer.username) {
             return;
         }
+        this.room.roomBroadcast('announcement', `${username}: ${eventName}`);
         this[eventName]();
-        this.room.roomBroadcast('announcement', `${username}: ${eventName}`)
-        if (!this.ended) {
+        let aborted = false;
+        if (eventName === 'fold' && this.existOnlyOne()) {
+            aborted = true;
+            this.close();
+        } else if (eventName === 'call') {
+            const isLastCall = !this.activePlayers.some(
+                player => player.betChips !== this.currentPlayer.betChips
+            );
+            if (isLastCall
+                && (
+                (this.round === Round.Preflop && this.currentPlayer.isBigBlind())
+                || (this.round !== Round.Preflop && isLastCall)
+                )
+            ) {
+                this.setNextRound();
+                aborted = true;
+            }
+        }
+        if (this.started && !aborted) {
             this.setNextPlayer();
             this.processPlayer();
         }
     }
 
     public fold() {
-        this.checkTimes += 1;
         this.currentPlayer.isFolded = true;
         this.room.roomBroadcast('fold', this.currentPlayer.username);
-        if (this.existOnlyOne()) {
-            this.close();
-        }
     }
 
     public check() {
@@ -330,13 +382,5 @@ module.exports = class Game {
     public call() {
         this.bet(this.betNumber - this.currentPlayer.betChips);
         this.checkTimes += 1;
-        const isLastCall = !this.activePlayers.some(
-            player => player.betChips !== this.currentPlayer.betChips
-        );
-        if (this.round === Round.Preflop && this.currentPlayer.isBigBlind() && isLastCall) {
-            this.setNextRound();
-        } else if (this.round !== Round.Preflop && isLastCall) {
-            this.setNextRound();
-        }
     }
 };

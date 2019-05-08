@@ -7,11 +7,12 @@ module.exports = class Room {
         this.description = description || '';
         this.sockets = {};
         this.players = {};
-        this.game = null;
+        this.game = new Game(this);
+        this.createdTime = Date.now();
     }
 
     start() {
-        this.game = new Game(this, this.playerList);
+        this.game = new Game(this);
     }
 
     isFull() {
@@ -23,8 +24,6 @@ module.exports = class Room {
             if (this.sockets[username] === socket) {
                 delete this.sockets[username];
                 delete this.players[username];
-            }
-            if (this.game) {
                 this.game.disconnect(username);
             }
         })
@@ -38,12 +37,18 @@ module.exports = class Room {
         this.sockets[username].emit(event, payload);
     }
 
+    isOld() {
+        return Date.now() - this.createdTime > 60 * 1000;
+    }
+
     addPlayer(user, socket) {
-        this.sockets[user.username] = socket;
-        this.players[user.username] = {
+        const userInfo = {
             username: user.username,
             chip: user.chip,
         };
+        this.sockets[user.username] = socket;
+        this.players[user.username] = userInfo;
+        this.game.addPlayer(userInfo);
         socket.join(this.name);
         socket.on('fold', () => {
             this.game.triggerEvent(user.username, 'fold');
@@ -59,7 +64,6 @@ module.exports = class Room {
         });
         this.roomBroadcast('join', this.players[user.username]);
         if (this.isFull()) {
-            this.game = new Game(this, this.playerList);
             setTimeout(() => {
                 this.roomBroadcast('announcement', 'Game will begin in seconds...');
             }, 3000);
@@ -70,11 +74,14 @@ module.exports = class Room {
     }
 
     get peopleNumber() {
-        return Object.keys(this.sockets).length;
+        return this.game.players.length;
     }
 
     get playerList() {
-        return Object.keys(this.players).map(key => this.players[key]);
+        return this.game.players.map(player => ({
+            username: player.username,
+            chip: player.chip,
+        }));
     }
 
     get roomInfo() {
@@ -89,7 +96,7 @@ module.exports = class Room {
         return {
             name: this.name,
             description: this.description,
-            players: Object.keys(this.sockets).map(key => this.players[key]),
+            players: this.playerList,
         }
     }
 };

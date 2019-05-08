@@ -232,3 +232,17 @@ export default class Pattern {
         }
     }
 }
+
+const deck = new Deck()
+const publicCards = [
+    deck.draw(),
+    deck.draw(),
+    deck.draw(),
+    deck.draw(),
+    deck.draw(),
+];
+const handCards = [
+    deck.draw(),
+    deck.draw(),
+];
+
