@@ -3,7 +3,7 @@ const chipManager = require('./chipManager');
 
 module.exports = async (username, chip) => {
     try {
-        const user = await User.findOne({username});
+        const user = await User.findOne({name: username});
         user.chip += chip;
         chipManager.update(user);
         await user.save();
