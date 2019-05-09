@@ -8,7 +8,7 @@ module.exports = (app) => {
     }));
 
     app.get('/login/google/callback', passport.authenticate('google'), (req, res) => {
-        res.redirect('/');
+        res.redirect("http://poker.billyzou.com");
     });
 
     app.get('/me', async (req, res) => {
