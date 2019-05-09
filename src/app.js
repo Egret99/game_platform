@@ -47,7 +47,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use((req, res, next) => {
-    res.set('Access-Control-Allow-Origin', ['http://poker.billyzou.com', 'http://http://poker-platform.herokuapp.com']);
+    res.set('Access-Control-Allow-Origin', ['http://poker.billyzou.com', 'http://poker-platform.herokuapp.com']);
     res.set('Access-Control-Allow-Headers', 'content-type');
     res.set('Access-Control-Allow-Credentials', 'true');
     next();
