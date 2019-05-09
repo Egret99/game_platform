@@ -16,8 +16,8 @@ class ChipManager {
     }
 
     update(user) {
-        const { username, chip } = user;
-        this.chips[username] = chip;
+        const { name, chip } = user;
+        this.chips[name] = chip;
     }
 }
 
