@@ -13,7 +13,7 @@ passport.deserializeUser(async (id, cb) => {
     if (user) {
         cb(null, {
             _id: user.id,
-            username: user.username,
+            username: user.name,
             name: user.name,
             chip: user.chip
         });
