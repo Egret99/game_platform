@@ -25,7 +25,7 @@ passport.deserializeUser(async (id, cb) => {
 passport.use(new GoogleStrategy({
     clientID: keys.googleClientID,
     clientSecret: keys.googleClientSecret,
-    callbackURL: "/login/google/callback"
+    callbackURL: "http://poker.billyzou.com/login/google/callback"
     }, async (accessToken, refreshToken, profile, cb) => {
 
         let user = await User.findOne({username: profile.id});
